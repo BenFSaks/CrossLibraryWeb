@@ -37,7 +37,7 @@ app.get('/createdb', (req, res) => {
 
 //Create table
 app.get('/createpoststable', (req, res) => {
-    let sql = 'CREATE TABLE posts(id int AUTO_INCREMENT, title VARCHAR(255), body VARCHAR(255), PRIMARY KEY (id))'
+    let sql = 'CREATE TABLE users(id int AUTO_INCREMENT, username VARCHAR(255), name VARCHAR(255), password VARCHAR(225), PRIMARY KEY (id))'
     db.query(sql, (err, result) => {
         if(err) throw err;
         console.log(result);
@@ -107,9 +107,9 @@ app.get('/deletepost/:id', (req,res) =>{
 })
 const initalizePassport = require('./passport-config')
 initalizePassport(
-    passport, 
-    email => users.find(user => user.email === email),
-    id => users.find(user => user.id === id)
+    passport,   
+    email => db.find(user => user.email === email),
+    id => db.find(user => user.id === id)
 )
 
 
@@ -149,11 +149,15 @@ app.post('/login',checkNotAuthenticated, passport.authenticate('local', {
 app.post('/register', checkNotAuthenticated, async(req,res) => {
     try{
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
-        users.push({
-            id: Date.now().toString(),
-            name: req.body.name,
+        let user = ({
+            username: req.body.name,
             email: req.body.email,
             password: hashedPassword
+        })
+        let sql = 'INSERT INTO users SET ?'
+        let query = db.query(sql, user,(err,result) =>{
+            if(err) throw err
+            console.log(result)
         })
         res.redirect('/login')
     } catch {
